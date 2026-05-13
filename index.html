@@ -1,0 +1,463 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Entheogen Stewardship Project</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <style>
+    :root {
+      --card-w: 90vw;
+      --gap: 2.5vw;
+      --header-h: 56px;
+      --radius: 20px;
+      --bg-body: #050711;
+      --accent: #35c26b;
+      --pyramid-bg: url("./media/image/pyramid_daytime_final.png");
+    }
+
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --pyramid-bg: url("./media/image/pyramid_twilight_final.png");
+      }
+    }
+
+    *, *::before, *::after { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      color: #f5f5f5;
+      background: var(--bg-body);
+      overflow-x: hidden;
+    }
+
+    a { color: inherit; }
+
+    header {
+      position: fixed;
+      top: 0; left: 0; right: 0;
+      z-index: 100;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0.75rem 1.5rem;
+      height: var(--header-h);
+      background: rgba(3, 6, 17, 0.92);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      border-bottom: 1px solid rgba(255,255,255,0.05);
+    }
+
+    header .logo {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      font-weight: 600;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+      font-size: 0.9rem;
+    }
+
+    header nav a {
+      margin-left: 1rem;
+      color: #dcdcdc;
+      text-decoration: none;
+      font-size: 0.9rem;
+    }
+
+    header nav a:hover { color: #fff; }
+
+    .btn-nav {
+      padding: 0.4rem 0.9rem;
+      border-radius: 999px;
+      border: 1px solid rgba(255,255,255,0.25);
+      text-decoration: none;
+      font-size: 0.8rem;
+    }
+
+    .btn-nav.primary {
+      background: var(--accent);
+      border-color: var(--accent);
+      color: #041010;
+      font-weight: 600;
+    }
+
+    /* Globe layer */
+    #globe-wrapper {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100vh;
+      z-index: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      overflow: visible;
+      pointer-events: none;
+      will-change: transform;
+      transform-origin: center center;
+    }
+
+    #esp-globe-canvas {
+      width: min(52vw, 680px);
+      height: min(52vw, 680px);
+      min-height: 0;
+      display: block;
+    }
+
+    main#scroll-container {
+      position: relative;
+      z-index: 10;
+      padding-bottom: var(--gap);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: var(--gap);
+    }
+
+    section.panel {
+      position: relative;
+      width: var(--card-w);
+      min-height: calc(100vh - var(--header-h) - var(--gap));
+      border-radius: var(--radius);
+      overflow: hidden;
+      background: rgba(5, 7, 17, 0.55);
+      backdrop-filter: blur(6px);
+      -webkit-backdrop-filter: blur(6px);
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      color: #e4e4e4;
+    }
+
+    section.panel.hero-full {
+      width: 100vw;
+      min-height: 100vh;
+      min-height: 100svh;
+      border-radius: 0;
+      background: transparent;
+      backdrop-filter: none;
+      -webkit-backdrop-filter: none;
+      justify-content: flex-end;
+      padding-bottom: 6vh;
+    }
+
+    section.panel.hero-full .card-content {
+      padding-left: clamp(2rem, 8vw, 6rem);
+      padding-right: clamp(2rem, 8vw, 6rem);
+      max-width: 800px;
+    }
+
+    .card-bg {
+      position: absolute;
+      inset: 0;
+      z-index: 0;
+      overflow: hidden;
+    }
+
+    .card-bg video,
+    .card-bg img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display: block;
+    }
+
+    .card-bg video { opacity: 0.4; }
+    .card-bg img { opacity: 0.35; }
+
+    .card-bg::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: radial-gradient(ellipse at center, transparent 40%, var(--bg-body) 100%);
+      pointer-events: none;
+    }
+
+    section.panel.hero-full .card-bg::after {
+      background: linear-gradient(to top, rgba(5,7,17,0.85) 0%, transparent 50%);
+    }
+
+    .card-content {
+      position: relative;
+      z-index: 1;
+      padding: clamp(2rem, 5vw, 4rem);
+      max-width: 720px;
+    }
+
+    h1 {
+      font-size: clamp(1.8rem, 3.5vw, 2.8rem);
+      margin: 0 0 0.75rem;
+      line-height: 1.15;
+    }
+
+    h2 {
+      font-size: clamp(1.4rem, 2.8vw, 2rem);
+      margin: 0 0 0.6rem;
+      line-height: 1.2;
+    }
+
+    p {
+      line-height: 1.7;
+      font-size: clamp(0.9rem, 1.1vw, 1.05rem);
+      color: #d0d0d0;
+      margin: 0 0 0.75rem;
+    }
+
+    .hero-ctas {
+      margin-top: 1.5rem;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.75rem;
+    }
+
+    .btn {
+      display: inline-block;
+      padding: 0.7rem 1.6rem;
+      border-radius: 999px;
+      text-decoration: none;
+      font-size: 0.92rem;
+      font-weight: 500;
+      border: 1px solid rgba(255,255,255,0.2);
+      transition: transform 0.2s, box-shadow 0.2s;
+    }
+
+    .btn:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 4px 20px rgba(0,0,0,0.4);
+    }
+
+    .btn.primary { background: var(--accent); border-color: var(--accent); color: #041010; }
+    .btn.secondary { background: rgba(5, 7, 17, 0.7); color: #f5f5f5; }
+
+    .link {
+      color: #8fd4ff;
+      text-decoration: none;
+      font-size: 0.9rem;
+    }
+
+    .link:hover { text-decoration: underline; }
+
+    @keyframes urgentPulse {
+      0%, 100% { box-shadow: 0 0 8px rgba(224,69,69,0.4); }
+      50% { box-shadow: 0 0 22px rgba(224,69,69,0.8), 0 0 40px rgba(224,69,69,0.3); }
+    }
+
+    .urgent-flash {
+      animation: urgentPulse 1.5s ease-in-out infinite;
+    }
+
+    footer#site-footer {
+      position: relative;
+      z-index: 10;
+      width: 100vw;
+      margin-left: calc(-50vw + 50%);
+      min-height: 60vh;
+      background-image: var(--pyramid-bg);
+      background-size: cover;
+      background-position: center 20%;
+      background-repeat: no-repeat;
+      overflow: hidden;
+      border-top: 1px solid rgba(255,255,255,0.08);
+      display: flex;
+      align-items: flex-end;
+    }
+
+    #pyramid-apex {
+      position: absolute;
+      left: 50%;
+      top: 5%;
+      width: 5px;
+      height: 5px;
+      transform: translate(-60%, -60%);
+      pointer-events: none;
+      z-index: 90;
+    }
+
+    .footer-overlay {
+      position: relative;
+      z-index: 2;
+      width: 100%;
+      padding: clamp(24px, 4vw, 64px);
+      color: #fff;
+      background: linear-gradient(
+        180deg,
+        rgba(5,7,17,0.15) 0%,
+        rgba(5,7,17,0.45) 40%,
+        rgba(5,7,17,0.82) 100%
+      );
+      text-align: center;
+      font-size: 0.85rem;
+    }
+
+    @media (max-width: 768px) {
+      :root {
+        --card-w: 94vw;
+        --gap: 1.5vw;
+        --header-h: 50px;
+        --radius: 16px;
+      }
+
+      #esp-globe-canvas {
+        width: min(72vw, 420px);
+        height: min(72vw, 420px);
+      }
+
+      section.panel {
+        min-height: calc(100vh - var(--header-h) - var(--gap) * 2);
+        min-height: calc(100svh - var(--header-h) - var(--gap) * 2);
+        align-items: center;
+        text-align: center;
+      }
+
+      section.panel.hero-full {
+        min-height: 100vh;
+        min-height: 100svh;
+        justify-content: flex-end;
+        padding-bottom: 8vh;
+      }
+
+      .card-content {
+        padding: clamp(2rem, 8vw, 3.5rem) clamp(1.5rem, 5vw, 2.5rem);
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+      }
+
+      .hero-ctas {
+        flex-direction: column;
+        align-items: stretch;
+        width: 100%;
+        max-width: 300px;
+      }
+
+      footer#site-footer {
+        min-height: 48vh;
+        background-position: center 16%;
+      }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="logo">
+      <span>Entheogen Stewardship Project</span>
+    </div>
+    <nav>
+      <a href="/globe">Globe</a>
+      <a href="./donors.html">Projects</a>
+      <a href="./donors.html" class="btn-nav primary">Donate</a>
+    </nav>
+  </header>
+
+  <div id="globe-wrapper">
+    <canvas id="esp-globe-canvas"></canvas>
+  </div>
+
+  <main id="scroll-container">
+    <section id="sec-rio" class="panel hero-full">
+      <div class="card-bg">
+        <video autoplay loop muted playsinline>
+          <source src="./media/video/sacredvillage-river.webm" type="video/webm" />
+        </video>
+      </div>
+      <div class="card-content">
+        <h1>Global Alliance Network</h1>
+        <p>Help us build the bridge from Ancestral Intellect to Entheogen Conservation</p>
+        <div class="hero-ctas" style="justify-content:center;">
+          <a href="/globe" class="btn primary">Explore the Globe</a>
+          <a href="./donors.html" class="btn secondary">Support the Mission</a>
+        </div>
+      </div>
+    </section>
+
+
+    <section id="sec-waf" class="panel">
+      <div class="card-bg">>
+    <div className="content-for-waf-spain">
+        <img src="./media/image/yawanawa-banner.jpg
+        "alt="waf"/>
+      </div>
+      <div:<div class="card-content">
+       </p>ESP is honored to help share this invitation to a gathering where Indigenous Amazonian leaders, researchers, and advocates meet to shape the future of ayahuasca.</p>
+       <a href="./landing/waf=slideshow/index.html" target="_blank" class="btn primary">Invitation</a>
+    </div>
+  </section>
+  
+    <section id="sec-peyote" class="panel">
+      <div class="card-bg">
+        <video autoplay loop muted playsinline>
+          <source src="./media/video/peyote-bg.mp4" type="video/mp4" />
+        </video>
+      </div>
+      <div class="card-content">
+        <h2>Peyote Conservation Alert</h2>
+       <p>Only three licensed peyote harvesters remain in the United States. Habitat is shrinking while demand grows. This medicine’s future depends on the communities who have protected it for generations.</p>
+      <p>IMC works to support Indigenous-led efforts such as the Peyote Way of Life and allied coalitions defending habitat, access, and ceremony.</p>
+      <a href="https://imc.fund/donate-now" target="_blank" class="btn primary">Support Peyote Stewardship</a>
+      </div>
+    </section>
+
+    <section id="sec-toad" class="panel">
+      <div class="card-bg">
+        <video autoplay loop muted playsinline>
+          <source src="./media/video/toad-AdobeStock_119520285.webm" type="video/webm" />
+        </video>
+      </div>
+      <div class="card-content">
+        <h2>Sonoran Desert Toad Alert</h2>
+        <p>Incilius alvarius at Risk of Extinction</p>
+      </div>
+    </section>
+
+    <section id="sec-support" class="panel">
+      <div class="card-bg">
+        <video autoplay loop muted playsinline>
+          <source src="./media/video/takes_AStock_282172178.webm" type="video/webm" />
+        </video>
+      </div>
+      <div class="card-content">
+        <h2>We Can't Do This Alone</h2>
+        <p>Your support helps fund Indigenous-led conservation projects.</p>
+      </div>
+    </section>
+
+    <section id="sec-network" class="panel">
+      <div class="card-bg">
+        <video autoplay loop muted playsinline>
+          <source src="./media/video/deforested_AdobeStock_1418391775.webm" type="video/webm" />
+        </video>
+      </div>
+      <div class="card-content">
+        <h2>A Global, Community-Built Entheogen Conservation Network</h2>
+        <p>Hundreds of organizations across more than 25 countries.</p>
+      </div>
+    </section>
+        <div id="pyramid-apex" className="absolute top-20 w-4 h-4"></div>
+    <div className="pyramid-artwork"></div>
+  </section>
+  </main>
+  
+  <section className="scroll-section w-full h-screen relative">
+  
+
+  <footer id="site-footer">
+    <div id="pyramid-apex"></div>
+    <div class="footer-overlay">
+      <p style="font-style:italic;color:#c0c0c0;margin:0 0 0.75rem;line-height:1.6;">
+        This work is a gift of Great Spirit, our Ancestral leaders and each and every Plant and Animal teacher we have come to know!
+      </p>
+      Entheogen Stewardship Project · 501(c)(3) Nonprofit · Arkansas, USA
+      <a href="mailto:info@entheogenstewardship.org" class="link">info@entheogenstewardship.org</a>
+    </div>
+  </footer>
+
+  <script src="https://unpkg.com/gsap@3/dist/gsap.min.js"></script>
+  <script src="https://unpkg.com/gsap@3/dist/ScrollTrigger.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+  <script src="./js/globe.js"></script>
+  <script src="./js/home-scroll.js"></script>
+</body>
+</html>
